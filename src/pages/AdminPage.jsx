@@ -5,6 +5,7 @@ import QuizList from '../components/admin/QuizList'
 import QuestionEditor from '../components/admin/QuestionEditor'
 import QRPanel from '../components/admin/QRPanel'
 import LiveController from '../components/admin/LiveController'
+import LiveLeaderboard from '../components/admin/LiveLeaderboard'
 
 function AdminPage() {
   const navigate = useNavigate()
@@ -138,6 +139,7 @@ function AdminPage() {
                 quiz={selectedQuiz}
                 questions={questions}
               />
+              <LiveLeaderboard quiz={selectedQuiz} />
             </div>
           ) : (
             <div className="text-center py-20">
