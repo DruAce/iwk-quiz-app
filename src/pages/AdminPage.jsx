@@ -4,11 +4,13 @@ import { supabase } from '../supabase'
 import QuizList from '../components/admin/QuizList'
 import QuestionEditor from '../components/admin/QuestionEditor'
 import QRPanel from '../components/admin/QRPanel'
+import LiveController from '../components/admin/LiveController'
 
 function AdminPage() {
   const navigate = useNavigate()
   const [quizzes, setQuizzes] = useState([])
   const [selectedQuiz, setSelectedQuiz] = useState(null)
+  const [questions, setQuestions] = useState([])
   const [loading, setLoading] = useState(true)
   const [newTitle, setNewTitle] = useState('')
   const [showForm, setShowForm] = useState(false)
@@ -16,6 +18,11 @@ function AdminPage() {
   useEffect(() => {
     loadQuizzes()
   }, [])
+
+  // Fragen laden wenn Quiz ausgewählt wird
+  useEffect(() => {
+    if (selectedQuiz) loadQuestions()
+  }, [selectedQuiz])
 
   async function loadQuizzes() {
     setLoading(true)
@@ -25,6 +32,15 @@ function AdminPage() {
       .order('created_at', { ascending: false })
     if (!error) setQuizzes(data)
     setLoading(false)
+  }
+
+  async function loadQuestions() {
+    const { data } = await supabase
+      .from('questions')
+      .select('*')
+      .eq('quiz_id', selectedQuiz.id)
+      .order('order_index')
+    if (data) setQuestions(data)
   }
 
   async function createQuiz() {
@@ -110,12 +126,19 @@ function AdminPage() {
             </div>
           )}
 
-          {/* Fragen Editor */}
+          {/* Editor + Live Controls */}
           {selectedQuiz ? (
-  <div>
-    <QuestionEditor quiz={selectedQuiz} />
-    <QRPanel quiz={selectedQuiz} />
-  </div>
+            <div>
+              <QuestionEditor
+                quiz={selectedQuiz}
+                onQuestionsChange={loadQuestions}
+              />
+              <QRPanel quiz={selectedQuiz} />
+              <LiveController
+                quiz={selectedQuiz}
+                questions={questions}
+              />
+            </div>
           ) : (
             <div className="text-center py-20">
               <div className="text-6xl mb-4">🦴</div>

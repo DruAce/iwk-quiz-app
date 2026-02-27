@@ -1,15 +1,39 @@
 import { useState, useEffect } from 'react'
+import { supabase } from '../../supabase'
 
-function QuestionScreen({ questions, timerSeconds, onFinish }) {
+function QuestionScreen({ questions, timerSeconds, quizId, onFinish }) {
   const [currentQ, setCurrentQ] = useState(0)
   const [timeLeft, setTimeLeft] = useState(timerSeconds)
   const [selected, setSelected] = useState(null)
   const [score, setScore] = useState(0)
-  const [answers, setAnswers] = useState([])
 
   const question = questions[currentQ]
   const options = ['a','b','c','d']
 
+  // Auf Admin-Steuerung hören
+  useEffect(() => {
+    const channel = supabase
+      .channel('quiz-question-' + quizId)
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'quizzes',
+        filter: `id=eq.${quizId}`
+      }, (payload) => {
+        if (payload.new.status === 'finished') {
+          onFinish(score)
+        } else if (payload.new.current_question !== currentQ) {
+          setCurrentQ(payload.new.current_question)
+          setSelected(null)
+          setTimeLeft(timerSeconds)
+        }
+      })
+      .subscribe()
+
+    return () => supabase.removeChannel(channel)
+  }, [quizId, currentQ, score])
+
+  // Timer
   useEffect(() => {
     setTimeLeft(timerSeconds)
     setSelected(null)
@@ -17,10 +41,7 @@ function QuestionScreen({ questions, timerSeconds, onFinish }) {
 
   useEffect(() => {
     if (selected !== null) return
-    if (timeLeft <= 0) {
-      handleNext(null)
-      return
-    }
+    if (timeLeft <= 0) return
     const timer = setTimeout(() => setTimeLeft(t => t - 1), 1000)
     return () => clearTimeout(timer)
   }, [timeLeft, selected])
@@ -29,22 +50,13 @@ function QuestionScreen({ questions, timerSeconds, onFinish }) {
     if (selected !== null) return
     setSelected(opt)
     const isCorrect = opt === question.correct_answer.toLowerCase()
-    const pts = isCorrect ? Math.max(50, 50 + timeLeft * 50) : 0
-    if (isCorrect) setScore(s => s + pts)
-    setAnswers(a => [...a, { correct: isCorrect, pts }])
-    setTimeout(() => handleNext(opt), 1800)
-  }
-
-  function handleNext(opt) {
-    if (currentQ + 1 >= questions.length) {
-      const finalScore = answers.reduce((s, a) => s + a.pts, 0) +
-        (opt && opt === question.correct_answer.toLowerCase()
-          ? Math.max(50, 50 + timeLeft * 50) : 0)
-      onFinish(finalScore)
-    } else {
-      setCurrentQ(q => q + 1)
+    if (isCorrect) {
+      const pts = Math.max(50, 50 + timeLeft * 50)
+      setScore(s => s + pts)
     }
   }
+
+  if (!question) return null
 
   const pct = (timeLeft / timerSeconds) * 100
   const timerColor = timeLeft <= 3 ? '#ff6584' : timeLeft <= 5 ? '#ffd700' : '#6c63ff'
@@ -80,10 +92,7 @@ function QuestionScreen({ questions, timerSeconds, onFinish }) {
             />
           </svg>
           <div className="absolute inset-0 flex items-center justify-center">
-            <span
-              className="text-2xl font-bold"
-              style={{ color: timerColor }}
-            >
+            <span className="text-2xl font-bold" style={{ color: timerColor }}>
               {timeLeft}
             </span>
           </div>
@@ -115,14 +124,18 @@ function QuestionScreen({ questions, timerSeconds, onFinish }) {
               disabled={selected !== null}
               className={`border-2 rounded-xl p-4 text-left transition-all ${style}`}
             >
-              <div className="text-xs font-bold opacity-60 mb-1">
-                {opt.toUpperCase()}
-              </div>
+              <div className="text-xs font-bold opacity-60 mb-1">{opt.toUpperCase()}</div>
               <div className="text-sm font-medium">{value}</div>
             </button>
           )
         })}
       </div>
+
+      {selected && (
+        <p className="text-center text-[#7070a0] text-sm mt-6 animate-pulse">
+          Warte auf nächste Frage...
+        </p>
+      )}
     </div>
   )
 }

@@ -1,5 +1,27 @@
+import { useEffect } from 'react'
+import { supabase } from '../../supabase'
+
 function LobbyScreen({ quiz, player, onStart }) {
   const capacity = Math.round((1 / quiz.max_players) * 100)
+
+  // Auf Admin-Start warten
+  useEffect(() => {
+    const channel = supabase
+      .channel('quiz-status-' + quiz.id)
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'quizzes',
+        filter: `id=eq.${quiz.id}`
+      }, (payload) => {
+        if (payload.new.status === 'playing') {
+          onStart()
+        }
+      })
+      .subscribe()
+
+    return () => supabase.removeChannel(channel)
+  }, [quiz.id])
 
   return (
     <div className="max-w-md mx-auto px-6 py-12 text-center">
@@ -29,7 +51,7 @@ function LobbyScreen({ quiz, player, onStart }) {
           Im Raum
         </p>
         <div className="flex items-center gap-3 py-2">
-          <div className="w-9 h-9 rounded-xl bg-[#6c63ff]/20 flex items-center justify-center text-lg">
+          <div className="w-9 h-9 rounded-xl bg-[#6c63ff]/20 flex items-center justify-content:center flex items-center justify-center text-lg">
             😊
           </div>
           <div>
@@ -52,14 +74,6 @@ function LobbyScreen({ quiz, player, onStart }) {
           ))}
         </span>
       </div>
-
-      {/* Demo Button */}
-      <button
-        onClick={onStart}
-        className="w-full bg-[#6c63ff] hover:bg-[#7c74ff] text-white font-bold py-4 rounded-xl transition-all"
-      >
-        Demo: Quiz starten →
-      </button>
     </div>
   )
 }

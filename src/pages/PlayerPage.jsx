@@ -21,7 +21,6 @@ function PlayerPage() {
   }
 
   async function handleStart() {
-    // Fragen laden
     const { data } = await supabase
       .from('questions')
       .select('*')
@@ -39,7 +38,6 @@ function PlayerPage() {
 
   async function handleFinish(score) {
     setFinalScore(score)
-    // Score in Datenbank speichern
     await supabase
       .from('players')
       .update({ score })
@@ -72,7 +70,6 @@ function PlayerPage() {
         </button>
       </nav>
 
-      {/* Screens */}
       {screen === 'join' && (
         <JoinScreen onJoin={handleJoin} />
       )}
@@ -87,6 +84,7 @@ function PlayerPage() {
         <QuestionScreen
           questions={questions}
           timerSeconds={quiz.timer_seconds}
+          quizId={quiz.id}
           onFinish={handleFinish}
         />
       )}
