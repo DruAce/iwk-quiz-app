@@ -4,7 +4,7 @@ import { supabase } from '../supabase'
 import JoinScreen from '../components/player/JoinScreen'
 import LobbyScreen from '../components/player/LobbyScreen'
 import QuestionScreen from '../components/player/QuestionScreen'
-import ResultScreen from '../components/player/ResultScreen'
+import PodiumScreen from '../components/player/PodiumScreen'
 
 function PlayerPage() {
   const navigate = useNavigate()
@@ -12,7 +12,6 @@ function PlayerPage() {
   const [quiz, setQuiz] = useState(null)
   const [player, setPlayer] = useState(null)
   const [questions, setQuestions] = useState([])
-  const [finalScore, setFinalScore] = useState(0)
 
   async function handleJoin({ quiz, player }) {
     setQuiz(quiz)
@@ -37,12 +36,11 @@ function PlayerPage() {
   }
 
   async function handleFinish(score) {
-    setFinalScore(score)
     await supabase
       .from('players')
       .update({ score })
       .eq('id', player.id)
-    setScreen('result')
+    setScreen('podium')
   }
 
   function handleReplay() {
@@ -50,25 +48,26 @@ function PlayerPage() {
     setQuiz(null)
     setPlayer(null)
     setQuestions([])
-    setFinalScore(0)
   }
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white">
-      {/* Header */}
-      <nav className="sticky top-0 z-50 bg-[#0a0a0f]/85 backdrop-blur border-b border-[#2a2a3d] px-8 py-4 flex items-center justify-between">
-        <img
-          src="https://www.iwk.eu/images/IWK/page/logo_iwk.svg"
-          alt="IWK"
-          className="h-9 brightness-0 invert"
-        />
-        <button
-          onClick={() => navigate('/')}
-          className="text-[#7070a0] hover:text-white text-sm transition-all"
-        >
-          ← Zurück
-        </button>
-      </nav>
+      {/* Header – nur bei Join Screen */}
+      {screen === 'join' && (
+        <nav className="sticky top-0 z-50 bg-[#0a0a0f]/85 backdrop-blur border-b border-[#2a2a3d] px-8 py-4 flex items-center justify-between">
+          <img
+            src="https://www.iwk.eu/images/IWK/page/logo_iwk.svg"
+            alt="IWK"
+            className="h-9 brightness-0 invert"
+          />
+          <button
+            onClick={() => navigate('/')}
+            className="text-[#7070a0] hover:text-white text-sm transition-all"
+          >
+            ← Zurück
+          </button>
+        </nav>
+      )}
 
       {screen === 'join' && (
         <JoinScreen onJoin={handleJoin} />
@@ -88,10 +87,10 @@ function PlayerPage() {
           onFinish={handleFinish}
         />
       )}
-      {screen === 'result' && (
-        <ResultScreen
-          score={finalScore}
-          playerName={player.name}
+      {screen === 'podium' && (
+        <PodiumScreen
+          quiz={quiz}
+          player={player}
           onReplay={handleReplay}
         />
       )}
