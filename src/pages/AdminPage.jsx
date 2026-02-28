@@ -6,6 +6,7 @@ import QuestionEditor from '../components/admin/QuestionEditor'
 import QRPanel from '../components/admin/QRPanel'
 import LiveController from '../components/admin/LiveController'
 import LiveLeaderboard from '../components/admin/LiveLeaderboard'
+import AdminLogin from '../components/admin/AdminLogin'
 
 function AdminPage() {
   const navigate = useNavigate()
@@ -15,12 +16,14 @@ function AdminPage() {
   const [loading, setLoading] = useState(true)
   const [newTitle, setNewTitle] = useState('')
   const [showForm, setShowForm] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState(
+    sessionStorage.getItem('iwk-admin') === 'true'
+  )
 
   useEffect(() => {
     loadQuizzes()
   }, [])
 
-  // Fragen laden wenn Quiz ausgewählt wird
   useEffect(() => {
     if (selectedQuiz) loadQuestions()
   }, [selectedQuiz])
@@ -59,6 +62,10 @@ function AdminPage() {
     }
   }
 
+  if (!isLoggedIn) {
+    return <AdminLogin onLogin={() => setIsLoggedIn(true)} />
+  }
+
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white">
       {/* Header */}
@@ -68,12 +75,23 @@ function AdminPage() {
           alt="IWK"
           className="h-9 brightness-0 invert"
         />
-        <button
-          onClick={() => navigate('/')}
-          className="text-[#7070a0] hover:text-white text-sm transition-all"
-        >
-          ← Zurück
-        </button>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => {
+              sessionStorage.removeItem('iwk-admin')
+              setIsLoggedIn(false)
+            }}
+            className="text-[#7070a0] hover:text-[#ff6584] text-sm transition-all"
+          >
+            🔒 Ausloggen
+          </button>
+          <button
+            onClick={() => navigate('/')}
+            className="text-[#7070a0] hover:text-white text-sm transition-all"
+          >
+            ← Zurück
+          </button>
+        </div>
       </nav>
 
       <div className="max-w-6xl mx-auto px-8 py-10 grid grid-cols-[300px_1fr] gap-6">
