@@ -107,6 +107,15 @@ function AdminPage() {
               quizzes={quizzes}
               onSelect={setSelectedQuiz}
               onNew={() => setShowForm(true)}
+              onUpdate={(updatedQuiz, deletedId) => {
+                if (deletedId) {
+                  setQuizzes(quizzes.filter(q => q.id !== deletedId))
+                  if (selectedQuiz?.id === deletedId) setSelectedQuiz(null)
+                } else {
+                  setQuizzes(quizzes.map(q => q.id === updatedQuiz.id ? updatedQuiz : q))
+                  if (selectedQuiz?.id === updatedQuiz.id) setSelectedQuiz(updatedQuiz)
+                }
+              }}
             />
           )}
         </div>
