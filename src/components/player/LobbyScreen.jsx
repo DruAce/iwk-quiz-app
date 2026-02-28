@@ -4,7 +4,6 @@ import { supabase } from '../../supabase'
 function LobbyScreen({ quiz, player, onStart }) {
   const capacity = Math.round((1 / quiz.max_players) * 100)
 
-  // Auf Admin-Start warten
   useEffect(() => {
     const channel = supabase
       .channel('quiz-status-' + quiz.id)
@@ -24,18 +23,22 @@ function LobbyScreen({ quiz, player, onStart }) {
   }, [quiz.id])
 
   return (
-    <div className="max-w-md mx-auto px-6 py-12 text-center">
-      <div className="text-5xl mb-4">🦴</div>
-      <h1 className="text-3xl font-bold mb-2">{quiz.title}</h1>
-      <p className="text-[#7070a0] mb-6">
-        {quiz.timer_seconds} Sekunden pro Frage · Max. {quiz.max_players} Spieler
-      </p>
+    <div className="min-h-screen bg-[#0a0a0f] flex flex-col items-center justify-center px-4 py-8">
+
+      {/* Icon + Titel */}
+      <div className="text-center mb-6">
+        <div className="text-6xl mb-4">🦴</div>
+        <h1 className="text-2xl font-bold text-white mb-1">{quiz.title}</h1>
+        <p className="text-[#7070a0] text-sm">
+          {quiz.timer_seconds}s pro Frage · Max. {quiz.max_players} Spieler
+        </p>
+      </div>
 
       {/* Kapazität */}
-      <div className="bg-[#13131a] border border-[#2a2a3d] rounded-xl p-4 mb-6 text-left">
+      <div className="w-full max-w-sm bg-[#13131a] border border-[#2a2a3d] rounded-2xl p-4 mb-4">
         <div className="flex justify-between text-sm mb-2">
-          <span className="font-medium">Spieler-Kapazität</span>
-          <span className="text-[#43e97b]">1 / {quiz.max_players}</span>
+          <span className="font-medium text-white">Spieler-Kapazität</span>
+          <span className="text-[#43e97b] font-bold">1 / {quiz.max_players}</span>
         </div>
         <div className="h-2 bg-[#1c1c28] rounded-full">
           <div
@@ -46,33 +49,33 @@ function LobbyScreen({ quiz, player, onStart }) {
       </div>
 
       {/* Spieler */}
-      <div className="bg-[#13131a] border border-[#2a2a3d] rounded-xl p-6 mb-6 text-left">
+      <div className="w-full max-w-sm bg-[#13131a] border border-[#2a2a3d] rounded-2xl p-5 mb-6">
         <p className="text-xs font-bold uppercase tracking-widest text-[#7070a0] mb-4">
           Im Raum
         </p>
-        <div className="flex items-center gap-3 py-2">
-          <div className="w-9 h-9 rounded-xl bg-[#6c63ff]/20 flex items-center justify-content:center flex items-center justify-center text-lg">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-[#6c63ff]/20 flex items-center justify-center text-xl flex-shrink-0">
             😊
           </div>
           <div>
-            <p className="font-medium">{player.name}</p>
+            <p className="font-medium text-white">{player.name}</p>
             <p className="text-xs text-[#6c63ff]">● Du bist das</p>
           </div>
         </div>
       </div>
 
-      {/* Warten */}
-      <div className="flex items-center justify-center gap-2 text-[#7070a0] text-sm mb-8">
-        Warte auf Moderator
-        <span className="flex gap-1">
+      {/* Warten Animation */}
+      <div className="flex flex-col items-center gap-3">
+        <div className="flex gap-1.5">
           {[0,1,2].map(i => (
             <span
               key={i}
-              className="w-1.5 h-1.5 rounded-full bg-[#7070a0] animate-bounce"
+              className="w-2 h-2 rounded-full bg-[#6c63ff] animate-bounce"
               style={{ animationDelay: i * 0.2 + 's' }}
             />
           ))}
-        </span>
+        </div>
+        <p className="text-[#7070a0] text-sm">Warte auf Moderator...</p>
       </div>
     </div>
   )

@@ -10,7 +10,6 @@ function QuestionScreen({ questions, timerSeconds, quizId, onFinish }) {
   const question = questions[currentQ]
   const options = ['a','b','c','d']
 
-  // Auf Admin-Steuerung hören
   useEffect(() => {
     const channel = supabase
       .channel('quiz-question-' + quizId)
@@ -33,7 +32,6 @@ function QuestionScreen({ questions, timerSeconds, quizId, onFinish }) {
     return () => supabase.removeChannel(channel)
   }, [quizId, currentQ, score])
 
-  // Timer
   useEffect(() => {
     setTimeLeft(timerSeconds)
     setSelected(null)
@@ -62,9 +60,10 @@ function QuestionScreen({ questions, timerSeconds, quizId, onFinish }) {
   const timerColor = timeLeft <= 3 ? '#ff6584' : timeLeft <= 5 ? '#ffd700' : '#6c63ff'
 
   return (
-    <div className="max-w-md mx-auto px-6 py-8">
-      {/* Progress */}
-      <div className="mb-6">
+    <div className="min-h-screen bg-[#0a0a0f] flex flex-col">
+      {/* Top Bar */}
+      <div className="px-4 pt-4 pb-2">
+        {/* Progress Bar */}
         <div className="h-1.5 bg-[#1c1c28] rounded-full mb-2">
           <div
             className="h-1.5 rounded-full bg-gradient-to-r from-[#6c63ff] to-[#ff6584] transition-all duration-500"
@@ -72,27 +71,27 @@ function QuestionScreen({ questions, timerSeconds, quizId, onFinish }) {
           />
         </div>
         <div className="flex justify-between text-xs text-[#7070a0]">
-          <span>Frage {currentQ + 1} von {questions.length}</span>
-          <span>Punkte: {score}</span>
+          <span>Frage {currentQ + 1} / {questions.length}</span>
+          <span className="font-bold" style={{ color: '#6c63ff' }}>{score} Pkt</span>
         </div>
       </div>
 
       {/* Timer */}
-      <div className="flex justify-center mb-6">
-        <div className="relative w-20 h-20">
-          <svg className="w-20 h-20 -rotate-90" viewBox="0 0 80 80">
-            <circle cx="40" cy="40" r="34" fill="none" stroke="#1c1c28" strokeWidth="6"/>
+      <div className="flex justify-center py-4">
+        <div className="relative w-16 h-16">
+          <svg className="w-16 h-16 -rotate-90" viewBox="0 0 64 64">
+            <circle cx="32" cy="32" r="26" fill="none" stroke="#1c1c28" strokeWidth="5"/>
             <circle
-              cx="40" cy="40" r="34" fill="none"
-              stroke={timerColor} strokeWidth="6"
-              strokeDasharray={`${2 * Math.PI * 34}`}
-              strokeDashoffset={`${2 * Math.PI * 34 * (1 - pct / 100)}`}
+              cx="32" cy="32" r="26" fill="none"
+              stroke={timerColor} strokeWidth="5"
+              strokeDasharray={`${2 * Math.PI * 26}`}
+              strokeDashoffset={`${2 * Math.PI * 26 * (1 - pct / 100)}`}
               strokeLinecap="round"
               style={{ transition: 'stroke-dashoffset 1s linear, stroke 0.3s' }}
             />
           </svg>
           <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-2xl font-bold" style={{ color: timerColor }}>
+            <span className="text-xl font-bold" style={{ color: timerColor }}>
               {timeLeft}
             </span>
           </div>
@@ -100,41 +99,48 @@ function QuestionScreen({ questions, timerSeconds, quizId, onFinish }) {
       </div>
 
       {/* Frage */}
-      <h2 className="text-xl font-bold text-center mb-8 leading-snug">
-        {question.question_text}
-      </h2>
+      <div className="px-4 mb-4">
+        <div className="bg-[#13131a] border border-[#2a2a3d] rounded-2xl p-5">
+          <h2 className="text-base font-bold text-center leading-snug text-white">
+            {question.question_text}
+          </h2>
+        </div>
+      </div>
 
       {/* Antworten */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="px-4 grid grid-cols-2 gap-3 flex-1">
         {options.map(opt => {
           const value = question[`option_${opt}`]
           if (!value) return null
           const isCorrect = opt === question.correct_answer.toLowerCase()
-          let style = 'bg-[#13131a] border-[#2a2a3d] text-white hover:border-[#6c63ff] hover:bg-[#6c63ff]/10'
+          let style = 'bg-[#13131a] border-[#2a2a3d] text-white active:scale-95'
           if (selected !== null) {
             if (opt === selected && isCorrect) style = 'bg-[#43e97b]/15 border-[#43e97b] text-[#43e97b]'
             else if (opt === selected && !isCorrect) style = 'bg-[#ff6584]/10 border-[#ff6584] text-[#ff6584]'
             else if (isCorrect) style = 'bg-[#43e97b]/15 border-[#43e97b] text-[#43e97b]'
-            else style = 'bg-[#13131a] border-[#2a2a3d] text-[#7070a0] opacity-50'
+            else style = 'bg-[#13131a] border-[#2a2a3d] text-[#7070a0] opacity-40'
           }
           return (
             <button
               key={opt}
               onClick={() => handleSelect(opt)}
               disabled={selected !== null}
-              className={`border-2 rounded-xl p-4 text-left transition-all ${style}`}
+              className={`border-2 rounded-2xl p-4 text-left transition-all touch-manipulation ${style}`}
             >
               <div className="text-xs font-bold opacity-60 mb-1">{opt.toUpperCase()}</div>
-              <div className="text-sm font-medium">{value}</div>
+              <div className="text-sm font-medium leading-tight">{value}</div>
             </button>
           )
         })}
       </div>
 
+      {/* Warten */}
       {selected && (
-        <p className="text-center text-[#7070a0] text-sm mt-6 animate-pulse">
-          Warte auf nächste Frage...
-        </p>
+        <div className="text-center py-6">
+          <p className="text-[#7070a0] text-sm animate-pulse">
+            Warte auf nächste Frage...
+          </p>
+        </div>
       )}
     </div>
   )
